@@ -1,0 +1,1488 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monster Hunter 8 - Game Development Presentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <!-- Tambahkan library html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #020617;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        font-family: "Roboto Mono", monospace;
+      }
+
+      /* PRESENTATION WRAPPER */
+      .presentation-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        padding: 20px 0;
+      }
+
+      /* SLIDE CONTAINER */
+      .slide-container {
+        width: 1280px;
+        height: 720px;
+        background-color: #0f172a;
+        color: #f1f5f9;
+        font-family: "Roboto Mono", monospace;
+        padding: 45px 60px;
+        overflow: hidden;
+        position: relative;
+        display: none;
+        flex-direction: column;
+        border: 8px solid #1e293b;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      .slide-container.active {
+        display: flex;
+      }
+
+      /* Scanlines */
+      .slide-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+          linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.03),
+            rgba(0, 255, 0, 0.01),
+            rgba(0, 0, 255, 0.03)
+          );
+        background-size:
+          100% 4px,
+          3px 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* TYPOGRAPHY */
+      h1,
+      h2,
+      h3 {
+        font-family: "Press Start 2P", cursive;
+        color: #fbbf24;
+        margin: 0;
+        line-height: 1.4;
+      }
+      h1 {
+        font-size: 46px;
+        text-shadow: 4px 4px #7c2d12;
+      }
+      h2.slide-title {
+        font-size: 22px;
+        margin-bottom: 20px;
+        border-left: 10px solid #fbbf24;
+        padding-left: 20px;
+        text-transform: uppercase;
+        flex-shrink: 0;
+      }
+      p,
+      li {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #cbd5e1;
+      }
+      strong {
+        color: #fbbf24;
+      }
+
+      .content-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        z-index: 20;
+        min-height: 0;
+      }
+
+      /* LAYOUTS */
+      .two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* TILED CONTENT */
+      .tiled-content {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        width: 100%;
+      }
+      .tile {
+        background: #1e293b;
+        border: 4px double #fbbf24;
+        padding: 18px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .tile .icon {
+        font-size: 30px;
+        color: #10b981;
+        margin-bottom: 12px;
+      }
+      .tile h3 {
+        font-size: 11px;
+        margin-bottom: 8px;
+      }
+      .tile p {
+        font-size: 12px;
+        margin: 0;
+      }
+
+      /* IMAGES */
+      .image-wrapper {
+        border: 4px solid #334155;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #020617;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+      }
+      .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        image-rendering: pixelated;
+      }
+
+      /* TABLE */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #1e293b;
+        border: 4px solid #334155;
+      }
+      th,
+      td {
+        border: 2px solid #334155;
+        padding: 10px;
+        text-align: left;
+        font-size: 13px;
+        vertical-align: middle;
+      }
+      th {
+        background: #fbbf24;
+        color: #0f172a;
+        font-family: "Press Start 2P";
+        font-size: 10px;
+        text-align: center;
+      }
+      td {
+        color: #cbd5e1;
+        line-height: 1.4;
+      }
+
+      .scene-placeholder {
+        width: 180px;
+        height: 105px;
+        background: #020617;
+        border: 2px dashed #10b981;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #10b981;
+        font-size: 20px;
+        margin: 0 auto;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .scene-placeholder img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        border-radius: 8px;
+      }
+
+      /* DIAGRAM */
+      .diagram-container {
+        width: 100%;
+        flex: 1;
+        background: #020617;
+        border: 4px double #10b981;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .diagram-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background-color: #f8fafc;
+        border-radius: 4px;
+      }
+
+      /* AUDIO */
+      .sound-test-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+      }
+      .audio-track-card {
+        background: #1e293b;
+        border: 3px double #fbbf24;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .audio-track-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 35%;
+      }
+      .audio-track-info i {
+        font-size: 24px;
+        color: #10b981;
+      }
+      .audio-track-info .track-name {
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .audio-track-info .track-id {
+        font-size: 10px;
+        color: #10b981;
+        font-family: "Press Start 2P", cursive;
+        margin-top: 4px;
+        display: block;
+      }
+      audio {
+        flex-grow: 1;
+        height: 32px;
+      }
+
+      /* INVENTORY */
+      .inventory-screen {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        width: 100%;
+      }
+      .inventory-item {
+        background: #1e293b;
+        border: 4px double #fbbf24;
+        padding: 20px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .item-sprite-box {
+        width: 80px;
+        height: 80px;
+        background: #020617;
+        border: 3px solid #fbbf24;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+      .item-sprite-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .inventory-item h3 {
+        font-size: 13px;
+        color: #f1f5f9;
+        text-transform: uppercase;
+      }
+      .inventory-item .item-type {
+        font-size: 11px;
+        color: #10b981;
+        font-family: "Press Start 2P", cursive;
+      }
+      .inventory-item .item-desc {
+        font-size: 13px;
+        color: #94a3b8;
+        line-height: 1.5;
+      }
+
+      /* STAGES */
+      .stage-selection {
+        display: grid;
+        /* grid-template-columns: 1fr 1fr; */
+        gap: 30px;
+        width: 100%;
+        height: 100%;
+      }
+      .stage-card {
+        background: #1e293b;
+        border: 4px double #10b981;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .stage-title-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px double #334155;
+        padding-bottom: 10px;
+      }
+      .stage-title-box h3 {
+        font-size: 13px;
+        color: #fbbf24;
+      }
+      .stage-title-box span {
+        font-family: "Press Start 2P";
+        font-size: 11px;
+        color: #ef4444;
+      }
+      .stage-preview {
+        flex: 1;
+        background: #020617;
+        border: 3px solid #334155;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .stage-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .stage-desc {
+        font-size: 13px;
+        color: #cbd5e1;
+        line-height: 1.5;
+        margin: 0;
+      }
+
+      /* VIDEO */
+      .video-showcase-box {
+        width: 100%;
+        flex: 1;
+        background: #020617;
+        border: 6px double #ef4444;
+        border-radius: 8px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #ef4444;
+        gap: 15px;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .video-showcase-box video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #000;
+      }
+
+      /* HIGHLIGHTS */
+      .hp-bar {
+        width: 280px;
+        height: 28px;
+        border: 4px solid #fff;
+        position: relative;
+        margin-top: 20px;
+      }
+      .hp-fill {
+        width: 85%;
+        height: 100%;
+        background: #ef4444;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.4;
+        }
+      }
+      .blink-text {
+        animation: pulse 1.5s infinite;
+      }
+
+      /* ====== NAVIGATION BAR ====== */
+      .nav-bar {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: #0f172a;
+        border: 4px solid #1e293b;
+        padding: 12px 24px;
+        width: 1280px;
+        justify-content: space-between;
+      }
+
+      .nav-btn {
+        background: #1e293b;
+        border: 3px solid #fbbf24;
+        color: #fbbf24;
+        font-family: "Press Start 2P", cursive;
+        font-size: 11px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .nav-btn:hover:not(:disabled) {
+        background: #fbbf24;
+        color: #0f172a;
+      }
+      .nav-btn:disabled {
+        border-color: #334155;
+        color: #334155;
+        cursor: not-allowed;
+      }
+
+      .slide-counter {
+        font-family: "Press Start 2P", cursive;
+        font-size: 12px;
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .slide-dots {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        flex: 1;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        background: #334155;
+        border: 2px solid #475569;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .dot.active {
+        background: #fbbf24;
+        border-color: #fbbf24;
+      }
+      .dot:hover:not(.active) {
+        background: #10b981;
+        border-color: #10b981;
+      }
+
+      /* Slide title label in nav */
+      .slide-label {
+        font-family: "Press Start 2P", cursive;
+        font-size: 9px;
+        color: #64748b;
+        min-width: 200px;
+        text-align: center;
+      }
+
+      /* Tambahan style khusus saat print/export ke PDF */
+      .pdf-export-container {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        width: 1280px;
+        background: #020617; /* Sesuai background body */
+      }
+      .pdf-export-container .slide-container {
+        display: flex !important; /* Paksa tampil */
+        page-break-after: always; /* Buat halaman baru di PDF */
+        box-shadow: none !important; /* Hapus shadow agar bersih di PDF */
+        margin-bottom: 0 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="presentation-wrapper">
+      <!-- ===== SLIDE 1: TITLE ===== -->
+      <div
+        class="slide-container active"
+        id="slide-1"
+        data-title="TITLE SCREEN"
+      >
+        <div
+          class="content-area"
+          style="align-items: center; text-align: center"
+        >
+          <div style="margin-bottom: 30px">
+            <i
+              class="fa-solid fa-ghost"
+              style="font-size: 90px; color: #10b981"
+            ></i>
+          </div>
+          <h1>MONSTER<br />HUNTER 8</h1>
+          <p
+            style="
+              margin-top: 25px;
+              font-family: &quot;Press Start 2P&quot;;
+              font-size: 14px;
+              color: #10b981;
+            "
+          >
+            KELOMPOK 4 - GAME DEVELOPMENT
+          </p>
+          <div class="hp-bar"><div class="hp-fill"></div></div>
+          <p style="font-size: 13px; margin-top: 10px" class="blink-text">
+            PRESS ANY KEY TO START
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 2: TIM PEMBURU ===== -->
+      <div class="slide-container" id="slide-2" data-title="TIM PEMBURU">
+        <h2 class="slide-title">TIM PEMBURU</h2>
+        <div class="content-area">
+          <div class="tiled-content">
+            <div class="tile">
+              <i class="fa-solid fa-khanda icon"></i>
+              <h3>Ahmad Noval Algifari</h3>
+              <p>(50422128)</p>
+            </div>
+            <div class="tile">
+              <i class="fa-solid fa-shield-halved icon"></i>
+              <h3>Arjuna Hardy Alvarizky</h3>
+              <p>(50422265)</p>
+            </div>
+            <div class="tile">
+              <i class="fa-solid fa-wand-magic-sparkles icon"></i>
+              <h3>Muhammad Izzuddin Almansyur</h3>
+              <p>(51422084)</p>
+            </div>
+            <div class="tile">
+              <i class="fa-solid fa-hat-wizard icon"></i>
+              <h3>Mohammad Aulia Ainur Rohim</h3>
+              <p>(50422906)</p>
+            </div>
+            <div class="tile">
+              <i class="fa-solid fa-bowl-rice icon"></i>
+              <h3>Noval Raid Ramadhan</h3>
+              <p>(51422253)</p>
+            </div>
+            <div class="tile">
+              <i class="fa-solid fa-scroll icon"></i>
+              <h3>Rayakha Rheza Musyaffa Damanik</h3>
+              <p>(51422394)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 3: KONSEP GAME ===== -->
+      <div class="slide-container" id="slide-3" data-title="KONSEP GAME">
+        <h2 class="slide-title">KONSEP GAME</h2>
+        <div class="content-area">
+          <div class="two-column">
+            <div>
+              <p>
+                <strong>Monster Hunter 8</strong> adalah game bergenre
+                <strong>Roguelite Survival</strong>.
+              </p>
+              <ul style="margin-top: 16px; padding-left: 20px">
+                <li>Pemain berperan sebagai pemburu tunggal.</li>
+                <li>Menghadapi gelombang monster yang tak henti.</li>
+                <li>Tujuan: Bertahan hidup hingga batas waktu tertentu.</li>
+                <li>
+                  Mekanisme <strong>"Gagal - Ulang"</strong> yang menantang.
+                </li>
+              </ul>
+            </div>
+            <div class="image-wrapper" style="height: 420px">
+              <img src="gambar/gambar-1.jpg" alt="Konsep Game" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 4a: STORYBOARD 1 ===== -->
+      <div class="slide-container" id="slide-4" data-title="STORYBOARD (1/3)">
+        <h2 class="slide-title">
+          STORYBOARD <span style="font-size: 14px; color: #10b981">(1/3)</span>
+        </h2>
+        <div class="content-area">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 18%">SCENE</th>
+                <th style="width: 42%">DESKRIPSI</th>
+                <th style="width: 18%">SHOT</th>
+                <th style="width: 22%">AUDIO</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-2.jpeg" alt="Scene 1" />
+                  </div>
+                </td>
+                <td>
+                  Layar judul game, tombol "Mulai Game" & "Keluar". Musik latar
+                  mulai berjalan.
+                </td>
+                <td>Main Menu</td>
+                <td><strong>BGM:</strong> RPG_Exploration_BGM</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-3.jpeg" alt="Scene 2" />
+                  </div>
+                </td>
+                <td>
+                  Narasi: "Dunia diserang monster. Kamu satu-satunya pemburu
+                  yang tersisa..." Tombol skip tersedia.
+                </td>
+                <td>Intro / Cutscene</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-4.jpeg" alt="Scene 3" />
+                  </div>
+                </td>
+                <td>
+                  Timer mulai. Monster level rendah muncul. HP bar & timer
+                  tampil di HUD.
+                </td>
+                <td>Mulai Game</td>
+                <td>
+                  <strong>SFX:</strong> NPC_death, grunt, Male_death, Healing,
+                  Dagger, Whip, In_game_music
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 4b: STORYBOARD 2 ===== -->
+      <div class="slide-container" id="slide-5" data-title="STORYBOARD (2/3)">
+        <h2 class="slide-title">
+          STORYBOARD <span style="font-size: 14px; color: #10b981">(2/3)</span>
+        </h2>
+        <div class="content-area">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 18%">SCENE</th>
+                <th style="width: 42%">DESKRIPSI</th>
+                <th style="width: 18%">SHOT</th>
+                <th style="width: 22%">AUDIO</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-5.jpeg" alt="Scene 4" />
+                  </div>
+                </td>
+                <td>
+                  Jumlah & kecepatan monster meningkat. Efek layar intens, musik
+                  makin tegang.
+                </td>
+                <td>Eskalasi Kesulitan</td>
+                <td>
+                  <strong>SFX:</strong> NPC_death, grunt, Male_death, Healing,
+                  Dagger, Whip, In_game_music
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-6.jpeg" alt="Scene 5" />
+                  </div>
+                </td>
+                <td>
+                  Layar Game Over. Statistik: waktu bertahan & jumlah monster
+                  dikalahkan. Tombol Coba Lagi.
+                </td>
+                <td>Game Over</td>
+                <td><strong>SFX:</strong> Game_over</td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-7.jpeg" alt="Scene 6" />
+                  </div>
+                </td>
+                <td>
+                  Layar Victory dengan animasi kemenangan. Skor akhir &
+                  statistik. Tombol Main Lagi.
+                </td>
+                <td>Victory</td>
+                <td><strong>SFX:</strong> Victory</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 4c: STORYBOARD 3 ===== -->
+      <div class="slide-container" id="slide-6" data-title="STORYBOARD (3/3)">
+        <h2 class="slide-title">
+          STORYBOARD <span style="font-size: 14px; color: #10b981">(3/3)</span>
+        </h2>
+        <div class="content-area">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 18%">SCENE</th>
+                <th style="width: 42%">DESKRIPSI</th>
+                <th style="width: 18%">SHOT</th>
+                <th style="width: 22%">AUDIO</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="scene-placeholder">
+                    <img src="gambar/gambar-8.jpeg" alt="Scene 7" />
+                  </div>
+                </td>
+                <td>
+                  Transisi ke layar hitam, kembali ke Wave 1. Siklus roguelite
+                  "gagal → ulang" berjalan kembali.
+                </td>
+                <td>Restart</td>
+                <td><strong>BGM:</strong> RPG_Exploration</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 5: NAVIGASI ===== -->
+      <div class="slide-container" id="slide-7" data-title="STRUKTUR NAVIGASI">
+        <h2 class="slide-title">STRUKTUR NAVIGASI</h2>
+        <div class="content-area" style="gap: 0">
+          <div class="diagram-container">
+            <img src="gambar/gambar-9.jpg" alt="Flowchart Navigasi" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 6a: AUDIO ASSETS 1 ===== -->
+      <div class="slide-container" id="slide-8" data-title="AUDIO ASSETS (1/2)">
+        <h2 class="slide-title">
+          AUDIO ASSETS
+          <span style="font-size: 14px; color: #10b981">(1/2)</span>
+        </h2>
+        <div class="content-area">
+          <div class="sound-test-container">
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">RPG Exploration BGM</div>
+                  <span class="track-id">TRACK_01</span>
+                </div>
+              </div>
+              <audio controls src="audio/RPG_Exploration_BGM.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">In Game Music</div>
+                  <span class="track-id">TRACK_02</span>
+                </div>
+              </div>
+              <audio controls src="audio/In_game_music.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Whip Attack SFX</div>
+                  <span class="track-id">SFX_HIT</span>
+                </div>
+              </div>
+              <audio controls src="audio/Whip Attack_Sound effect.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Dagger Attack SFX</div>
+                  <span class="track-id">SFX_HIT</span>
+                </div>
+              </div>
+              <audio controls src="audio/Dagger_Attack.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Grunt SFX</div>
+                  <span class="track-id">SFX_HIT</span>
+                </div>
+              </div>
+              <audio controls src="audio/grunt_sfx.mp3"></audio>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 6b: AUDIO ASSETS 2 ===== -->
+      <div class="slide-container" id="slide-9" data-title="AUDIO ASSETS (2/2)">
+        <h2 class="slide-title">
+          AUDIO ASSETS
+          <span style="font-size: 14px; color: #10b981">(2/2)</span>
+        </h2>
+        <div class="content-area">
+          <div class="sound-test-container">
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Healing SFX</div>
+                  <span class="track-id">SFX_HEAL</span>
+                </div>
+              </div>
+              <audio controls src="audio/Healing.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Male Death SFX</div>
+                  <span class="track-id">SFX_DEATH</span>
+                </div>
+              </div>
+              <audio controls src="audio/Male_death_sfx.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">NPC Death SFX</div>
+                  <span class="track-id">SFX_DEATH</span>
+                </div>
+              </div>
+              <audio controls src="audio/NPC_death_sfx.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Game Over SFX</div>
+                  <span class="track-id">SFX_GAMEOVER</span>
+                </div>
+              </div>
+              <audio controls src="audio/Game_over.mp3"></audio>
+            </div>
+            <div class="audio-track-card">
+              <div class="audio-track-info">
+                <i class="fa-solid fa-music"></i>
+                <div>
+                  <div class="track-name">Victory SFX</div>
+                  <span class="track-id">SFX_VICTORY</span>
+                </div>
+              </div>
+              <audio controls src="audio/Victory.mp3"></audio>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 7: WEAPON ASSETS ===== -->
+      <div class="slide-container" id="slide-10" data-title="WEAPON ASSETS">
+        <h2 class="slide-title">WEAPON ASSETS (EQUIPMENT)</h2>
+        <div class="content-area">
+          <div class="inventory-screen">
+            <div class="inventory-item">
+              <div class="item-sprite-box">
+                <img src="gambar/book.png" alt="Buku" />
+              </div>
+              <h3>Buku</h3>
+              <span class="item-type">AOE_DAMAGE</span>
+              <span class="item-desc"
+                >Mengeluarkan lingkaran magis konstan di sekitar karakter untuk
+                menghalau monster jarak dekat.</span
+              >
+            </div>
+            <div class="inventory-item">
+              <div class="item-sprite-box">
+                <img src="gambar/cambuk.png" alt="Cambuk" />
+              </div>
+              <h3>Cambuk</h3>
+              <span class="item-type">MID_RANGE</span>
+              <span class="item-desc"
+                >Cambukan horizontal dengan area serang sedang, efektif memukul
+                mundur barisan musuh depan.</span
+              >
+            </div>
+            <div class="inventory-item">
+              <div class="item-sprite-box">
+                <img src="gambar/dagger.png" alt="Dagger" />
+              </div>
+              <h3>Dagger</h3>
+              <span class="item-type">FAST_PIERCE</span>
+              <span class="item-desc"
+                >Senjata tusuk berkecepatan tinggi dengan damage kritikal
+                terarah pada monster terdekat.</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 8: ENVIRONMENT ASSETS ===== -->
+      <div
+        class="slide-container"
+        id="slide-11"
+        data-title="ENVIRONMENT ASSETS"
+      >
+        <h2 class="slide-title">ENVIRONMENT ASSETS (STAGES)</h2>
+        <div class="content-area">
+          <div class="stage-selection">
+            <div class="stage-card">
+              <div class="stage-title-box">
+                <h3>STAGE: DUNGEON AREA</h3>
+                <span>LOCKED</span>
+              </div>
+              <div class="stage-preview">
+                <img
+                  src="gambar/gambar-11.jpeg"
+                  alt="Stage"
+                  style="height: 430px"
+                />
+              </div>
+              <!-- <p class="stage-desc">
+                Labirin lorong bawah tanah yang sempit, memaksa taktik
+                pertempuran jarak dekat yang intens.
+              </p> -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 9: GAME ASSEMBLY ===== -->
+      <div
+        class="slide-container"
+        id="slide-12"
+        data-title="GAME ASSEMBLY & DEMO"
+      >
+        <h2 class="slide-title">GAME ASSEMBLY</h2>
+        <div class="content-area" style="gap: 0">
+          <div class="video-showcase-box">
+            <video controls>
+              <source src="video/demo-game.mp4" type="video/mp4" />
+              Browser kamu tidak mendukung tag video.
+            </video>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 10a: BLACKBOX TESTING 1 ===== -->
+      <div
+        class="slide-container"
+        id="slide-12b"
+        data-title="BLACKBOX TESTING (1/2)"
+      >
+        <h2 class="slide-title">
+          BLACKBOX TESTING
+          <span style="font-size: 14px; color: #10b981">(1/2)</span>
+        </h2>
+        <div class="content-area">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 14%">KATEGORI</th>
+                <th style="width: 24%">SKENARIO</th>
+                <th style="width: 47%">HARAPAN</th>
+                <th style="width: 15%">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Main Menu</td>
+                <td>Inisialisasi Permainan</td>
+                <td>
+                  Main Menu tampil tanpa error, tombol Play & Options berfungsi
+                  sesuai tujuan.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle">UI</td>
+                <td>HP & EXP bar di kiri atas</td>
+                <td>
+                  HP bar berkurang sesuai damage, EXP bar bertambah sesuai EXP
+                  yang didapat.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Timer di tengah atas</td>
+                <td>Timer berjalan real-time sampai 10 menit.</td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Karakter</td>
+                <td>Karakter dapat bergerak</td>
+                <td>
+                  Karakter merespons input pemain dan bergerak ke arah kanan,
+                  kiri, atas, bawah.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="4" style="vertical-align: middle">Senjata</td>
+                <td>Senjata 1 digunakan</td>
+                <td>Senjata 1 mengeluarkan pecut ke arah musuh.</td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Senjata 2 digunakan</td>
+                <td>
+                  Senjata 2 mengeluarkan projectile ke arah musuh saat
+                  didapatkan.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Senjata 3 digunakan</td>
+                <td>
+                  Senjata 3 mengeluarkan efek serangan area berbentuk lingkaran
+                  di sekeliling karakter saat didapatkan.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Senjata memberikan damage</td>
+                <td>
+                  HP musuh berkurang sesuai nilai damage senjata ketika terkena
+                  efek senjata.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Musuh</td>
+                <td>Spawn Musuh</td>
+                <td>
+                  Musuh akan muncul di area permainan pada interval tertentu.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 10b: BLACKBOX TESTING 2 ===== -->
+      <div
+        class="slide-container"
+        id="slide-12c"
+        data-title="BLACKBOX TESTING (2/2)"
+      >
+        <h2 class="slide-title">
+          BLACKBOX TESTING
+          <span style="font-size: 14px; color: #10b981">(2/2)</span>
+        </h2>
+        <div class="content-area">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 14%">KATEGORI</th>
+                <th style="width: 24%">SKENARIO</th>
+                <th style="width: 47%">HARAPAN</th>
+                <th style="width: 15%">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle">EXP</td>
+                <td>Bola EXP biru / hijau / merah</td>
+                <td>
+                  Bola biru +1 EXP (awal game), hijau +10 EXP (mid game), merah
+                  +100 EXP (late game).
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Akumulasi EXP ditampilkan</td>
+                <td>
+                  Total EXP terakumulasi dengan benar dari berbagai jenis musuh
+                  dan tampil di panel status.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle">Level</td>
+                <td>Sistem level up</td>
+                <td>
+                  Karakter naik level saat EXP mencapai ambang batas, indikator
+                  level bertambah, dan dapat memilih senjata untuk di-upgrade.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Level up senjata 1 / 2 / 3</td>
+                <td>
+                  Efek pecutan lebih lebar, efek senjata keluar lebih cepat
+                  (frekuensi meningkat), area & damage senjata bertambah.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle">
+                  Kondisi Akhir
+                </td>
+                <td>Game Over saat HP = 0</td>
+                <td>
+                  Layar Game Over muncul dan permainan berhenti ketika HP
+                  karakter habis.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Victory pada menit ke-10</td>
+                <td>
+                  Layar Victory muncul dan permainan selesai saat timer mencapai
+                  10:00.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+              <tr>
+                <td>Kesulitan</td>
+                <td>Spawn musuh bertambah seiring waktu</td>
+                <td>
+                  Jumlah musuh yang muncul per interval meningkat seiring
+                  lamanya waktu bermain.
+                </td>
+                <td style="color: #10b981; text-align: center">
+                  <strong>SUCCESS</strong>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 11: DISTRIBUSI ===== -->
+      <div class="slide-container" id="slide-12d" data-title="DISTRIBUSI">
+        <h2 class="slide-title">DISTRIBUSI</h2>
+        <div
+          class="content-area"
+          style="align-items: center; text-align: center; gap: 25px"
+        >
+          <i
+            class="fa-solid fa-cloud-arrow-up"
+            style="font-size: 90px; color: #10b981"
+          ></i>
+          <p style="font-size: 18px; max-width: 700px">
+            Game <strong>Monster Hunter 8</strong> telah didistribusikan dan
+            dapat diakses melalui link berikut:
+          </p>
+          <div
+            style="
+              background: #1e293b;
+              border: 4px double #fbbf24;
+              padding: 20px 40px;
+            "
+          >
+            <a
+              href="https://shorturl.at/0VxNH"
+              target="_blank"
+              style="
+                color: #fbbf24;
+                font-family: &quot;Press Start 2P&quot;, cursive;
+                font-size: 14px;
+                text-decoration: none;
+                word-break: break-all;
+              "
+              >shorturl.at/0VxNH</a
+            >
+          </div>
+          <p style="font-size: 13px; color: #10b981">
+            <i class="fa-solid fa-folder-open"></i> Google Drive - Projek Sistem
+            Multimedia Kelompok 4
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== SLIDE 12: END ===== -->
+      <div class="slide-container" id="slide-13" data-title="QUEST COMPLETE">
+        <div
+          class="content-area"
+          style="align-items: center; text-align: center"
+        >
+          <i
+            class="fa-solid fa-trophy"
+            style="
+              font-size: 110px;
+              color: #fbbf24;
+              text-shadow: 5px 5px #7c2d12;
+            "
+          ></i>
+          <h1
+            style="
+              font-size: 40px;
+              color: #10b981;
+              text-shadow: 4px 4px #064e3b;
+              margin-top: 20px;
+            "
+          >
+            QUEST COMPLETE!
+          </h1>
+          <p
+            style="
+              margin-top: 20px;
+              color: #fbbf24;
+              font-family: &quot;Press Start 2P&quot;;
+              font-size: 14px;
+            "
+          >
+            TERIMA KASIH ATAS PERHATIANNYA
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== NAVIGATION BAR ===== -->
+      <div class="nav-bar">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">
+          <i class="fa-solid fa-chevron-left"></i> PREV
+        </button>
+
+        <div class="slide-dots" id="slideDots"></div>
+
+        <!-- Tombol Export PDF -->
+        <button
+          class="nav-btn"
+          id="exportBtn"
+          onclick="exportToPDF()"
+          style="margin: 0 15px"
+        >
+          <i class="fa-solid fa-file-pdf"></i> EXPORT PDF
+        </button>
+
+        <div class="slide-label" id="slideLabel"></div>
+
+        <div class="slide-counter">
+          <span id="slideCounter">1 / 13</span>
+        </div>
+
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">
+          NEXT <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+    <!-- end presentation-wrapper -->
+
+    <script>
+      const slides = document.querySelectorAll(".slide-container");
+      const totalSlides = slides.length;
+      let currentSlide = 0;
+
+      // Build dots
+      const dotsContainer = document.getElementById("slideDots");
+      slides.forEach((_, i) => {
+        const dot = document.createElement("div");
+        dot.className = "dot" + (i === 0 ? " active" : "");
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+      });
+
+      function goToSlide(index) {
+        slides[currentSlide].classList.remove("active");
+        dotsContainer.children[currentSlide].classList.remove("active");
+
+        currentSlide = Math.max(0, Math.min(index, totalSlides - 1));
+
+        slides[currentSlide].classList.add("active");
+        dotsContainer.children[currentSlide].classList.add("active");
+
+        document.getElementById("slideCounter").textContent =
+          `${currentSlide + 1} / ${totalSlides}`;
+        document.getElementById("slideLabel").textContent =
+          slides[currentSlide].dataset.title || "";
+        document.getElementById("prevBtn").disabled = currentSlide === 0;
+        document.getElementById("nextBtn").disabled =
+          currentSlide === totalSlides - 1;
+
+        // Scroll slide into view smoothly
+        slides[currentSlide].scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+
+      function changeSlide(dir) {
+        goToSlide(currentSlide + dir);
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
+          e.preventDefault();
+          changeSlide(1);
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+          e.preventDefault();
+          changeSlide(-1);
+        }
+      });
+
+      // Init
+      goToSlide(0);
+
+      // Fungsi untuk Export ke PDF
+      async function exportToPDF() {
+        const btn = document.getElementById("exportBtn");
+        const originalText = btn.innerHTML;
+        btn.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin"></i> EXPORTING...';
+        btn.disabled = true;
+
+        const { jsPDF } = window.jspdf;
+        const savedSlide = currentSlide;
+
+        const pdf = new jsPDF({
+          orientation: "landscape",
+          unit: "px",
+          format: [1280, 720],
+          hotfixes: ["px_scaling"],
+        });
+
+        for (let i = 0; i < totalSlides; i++) {
+          // Tampilkan slide satu per satu
+          slides.forEach((s, idx) => {
+            s.style.display = "none";
+          });
+          slides[i].style.display = "flex";
+
+          await new Promise((r) => setTimeout(r, 200));
+
+          const canvas = await html2canvas(slides[i], {
+            scale: 1,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#0f172a",
+            logging: false,
+            x: 0,
+            y: 0,
+            width: 1280,
+            height: 720,
+            windowWidth: 1280,
+            windowHeight: 720,
+            scrollX: 0,
+            scrollY: 0,
+          });
+
+          // Pastikan canvas benar-benar 1280x720
+          const resizedCanvas = document.createElement("canvas");
+          resizedCanvas.width = 1280;
+          resizedCanvas.height = 720;
+          const ctx = resizedCanvas.getContext("2d");
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(0, 0, 1280, 720);
+          ctx.drawImage(canvas, 0, 0, 1280, 720);
+
+          const imgData = resizedCanvas.toDataURL("image/jpeg", 0.95);
+
+          if (i > 0) pdf.addPage([1280, 720], "landscape");
+          pdf.addImage(imgData, "JPEG", 0, 0, 1280, 720, "", "FAST");
+        }
+
+        // Kembalikan slide semula
+        slides.forEach((s, idx) => {
+          s.style.display = idx === savedSlide ? "flex" : "none";
+        });
+
+        pdf.save("Monster_Hunter_8_Presentation.pdf");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    </script>
+  </body>
+</html>
